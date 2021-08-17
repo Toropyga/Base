@@ -3,7 +3,7 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.0.0
+ * @version 1.0.1
  * @copyright 2021
  */
 
@@ -93,7 +93,7 @@ class Base {
      * Определение IP адреса с которого открывается страница
      * @return mixed
      */
-    public function getIP () {
+    public static function getIP () {
         $ipn = (isset($_SERVER['REMOTE_ADDR']))?$_SERVER['REMOTE_ADDR']:'';
         if (!$ipn) $ipn = urldecode(getenv('HTTP_CLIENT_IP'));
         if (getenv('HTTP_X_FORWARDED_FOR') && strcasecmp(getenv("HTTP_X_FORWARDED_FOR"), "unknown")) $strIP = getenv('HTTP_X_FORWARDED_FOR');
@@ -124,7 +124,7 @@ class Base {
      * @param bool $print - вывод данных на экран
      * @return string
      */
-    public function dump ($array = array(), $print = true) {
+    public static function dump ($array = array(), $print = true) {
         $dump = print_r($array, true);
         $line = date('d.m.Y H:i:s')."<br>Return values:<br>---------------------<pre>".$dump."</pre>---------------------<br>";
         if ($print) echo $line;
@@ -144,7 +144,7 @@ class Base {
      *          5 => строка содержит хотя бы одну цифру;
      * @return bool
      */
-    public function checkPassword ($password, $len = 6, $type = 0) {
+    public static function checkPassword ($password, $len = 6, $type = 0) {
         // Предварительная настройка
         $num = '0-9';                   // числа;
         $sym = '!&@#$%\\^&*_\\+\\-';    // спецсимволы;
@@ -178,7 +178,7 @@ class Base {
      * @param string $format - формат проверяемой даты
      * @return bool
      */
-    public function validateDate($date, $format = 'd/m/Y H:i:s') {
+    public static function validateDate($date, $format = 'd/m/Y H:i:s') {
         $d = DateTime::createFromFormat($format, $date);
         return $d && $d->format($format) == $date;
     }
