@@ -3,7 +3,7 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.0.2
+ * @version 1.0.3
  * @copyright 2021
  */
 
@@ -181,6 +181,22 @@ class Base {
     public static function validateDate($date, $format = 'd/m/Y H:i:s') {
         $d = DateTime::createFromFormat($format, $date);
         return $d && $d->format($format) == $date;
+    }
+
+    /**
+     * Конвертирование текста в заданную кодировку
+     * @param string $line - строка с текстом
+     * @param string $enc - заданная кодировка, utf-8 по умолчанию
+     * @return string
+     */
+    public static function convertLine ($line, $enc = 'utf-8') {
+        if (!$line) return $line;
+        $list = array('utf-8', 'ascii', 'cp1251', 'KOI8-R', 'CP866', 'KOI8-U');
+        $cod = '';
+        if (function_exists("mb_detect_encoding")) $cod = @mb_detect_encoding($line, $list, true);
+        if (!$cod) $cod = self::detect_encoding($line);
+        if ($cod != $enc) $line = @mb_convert_encoding($line, $enc, $cod);
+        return $line;
     }
 
     /**

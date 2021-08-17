@@ -12,7 +12,8 @@
     "license": "MIT",
     "require": {
         "php": ">=5.1.0",
-        "ext-iconv": "*"
+        "ext-iconv": "*",
+        "ext-mbstring": "*"
     },
     "require-dev": {
 
