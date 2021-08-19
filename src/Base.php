@@ -3,7 +3,7 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.0.3
+ * @version 1.1.0
  * @copyright 2021
  */
 
@@ -24,11 +24,11 @@ class Base {
      * @param $data - массис
      * @return object
      */
-    public function ArrayToObj ($data) {
+    public static function ArrayToObj ($data) {
         if (!is_array($data) && !is_object($data)) return $data;
         foreach ($data as $key=>$value) {
             if (is_array($value)) $data[$key] = (object) $value;
-            if (isset($data->$key) && is_object($data->$key)) $data->$key = $this->ArrayToObj($data->$key);
+            if (isset($data->$key) && is_object($data->$key)) $data->$key = self::ArrayToObj($data->$key);
         }
         $data = (object) $data;
         return $data;
@@ -39,12 +39,12 @@ class Base {
      * @param $data - объект
      * @return array
      */
-    public function ObjToArray ($data) {
+    public static function ObjToArray ($data) {
         if (!is_array($data) && !is_object($data)) return $data;
         if (is_object($data)) $data = (array) $data;
         foreach ($data as $key=>$value) {
             if (is_object($value)) $data[$key] = (array) $value;
-            if (isset($data[$key]) && is_array($data[$key])) $data[$key] = $this->ObjToArray($data[$key]);
+            if (isset($data[$key]) && is_array($data[$key])) $data[$key] = self::ObjToArray($data[$key]);
         }
         $data = (array) $data;
         return $data;
@@ -52,46 +52,48 @@ class Base {
 
     /**
      * Вычисляем хэш строки
-     * @param $key - строка
-     * @param string $alg - ключ используемой функции, по умолчанию md5
+     * @param string $string - строка которая шифруется
+     * @param string $alg - алгоритм шифрования (тип используемой функции), по умолчанию md5
+     * @param string $key - ключ шифрования для алгоритма 'crypt_site'
      * @return bool|string
      */
-    public function getKeyHash ($key, $alg = '') {
+    public static function getKeyHash ($string, $alg = '', $key = '') {
 
         if (!$alg && defined("CRYPT_TYPE")) $alg = CRYPT_TYPE;
         elseif (!$alg) $alg = 'md5';
 
         switch ($alg) {
             case 'password':
-                $key = password_hash($key, PASSWORD_DEFAULT);
+                $string = password_hash($string, PASSWORD_DEFAULT);
                 break;
             case 'password_bcrypt':
-                $key = password_hash($key, PASSWORD_BCRYPT);
+                $string = password_hash($string, PASSWORD_BCRYPT);
                 break;
             case 'crypt':
-                $key = crypt($key);
+                $string = crypt($string);
                 break;
             case 'crypt_site':
-                if (defined("CRYPT_KEY")) $key = crypt($key, CRYPT_KEY);
-                else $key = crypt($key);
+                if ($key) $string = crypt($string, $key);
+                elseif (defined("CRYPT_KEY")) $string = crypt($string, CRYPT_KEY);
+                else $string = crypt($string);
                 break;
             case 'sha1':
-                $key = sha1($key);
+                $string = sha1($string);
                 break;
             case 'hash':
-                $key = hash('sha256', $key);
+                $string = hash('sha256', $string);
                 break;
             case 'md5':
             default:
-                $key = md5($key);
+                $string = md5($string);
                 break;
         }
-        return $key;
+        return $string;
     }
 
     /**
      * Определение IP адреса с которого открывается страница
-     * @return mixed
+     * @return array
      */
     public static function getIP () {
         $ipn = (isset($_SERVER['REMOTE_ADDR']))?$_SERVER['REMOTE_ADDR']:'';
@@ -232,5 +234,183 @@ class Base {
             }
         }
         return $enc;
+    }
+
+    /**
+     * Экранирование данных
+     * защищаемся от передачи вредоносных запросов
+     * @param array|string $array - строка или массив данных
+     * @param string $code - кодировка текста
+     * @return array|string
+     */
+    public static function screeningData ($array, $code = 'utf-8') {
+        if (!is_array($array)) {
+            $array = strtr($array, array("&"=>"&amp;"));
+            return htmlentities($array, ENT_QUOTES);
+        }
+        foreach ($array as $key => $row) {
+            $key = htmlentities($key, ENT_QUOTES);
+            if (is_array($row)) $array[$key] = self::screeningData($row);
+            else {
+                $row = self::convertLine($row, $code);
+                $row = strtr($row, array("&"=>"&amp;"));
+                $array[$key] = htmlentities($row, ENT_QUOTES);
+            }
+        }
+        return $array;
+    }
+
+    /**
+     * Деэкранирование данных
+     * @param array|string $array
+     * @return array|string
+     */
+    public static function unscreeningData ($array) {
+        if (!is_array($array)){
+            $array = html_entity_decode($array);
+            return strtr($array, array("&amp;"=>"&"));
+        }
+        foreach ($array as $key => $row) {
+            $key = html_entity_decode($key);
+            if (is_array($row)) $array[$key] = self::unscreeningData($row);
+            else {
+                $row = html_entity_decode($row);
+                $array[$key] = strtr($row, array("&amp;"=>"&"));
+            }
+        }
+        return $array;
+    }
+
+    /**
+     * Установка заголовков
+     * @param string $type      - тип контента ('text/html', 'application/json', 'text/xml')
+     * @param string $CODE      - кодировка текста ('utf-8', 'ascii', 'cp1251', 'KOI8-R', 'CP866', 'KOI8-U', 'ISO-8859-1' и т.д.)
+     * @param array $methods    - допустимые методы взаимодействия ('GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'TRACE', 'PATCH')
+     * @param string $servers   - сервера с которыми допускается взаимодействие ('*' - любой, <origin> - один источник [https://google.com] , null - нежелательный параметр)
+     * @param string $protocol  - протокол передачи данных (http, https, ftp)
+     * @param integer $lifetime - "время жизни" страницы при безопасном соединении (https) в секундах
+     * @return bool
+     */
+    public static function setHeaders ($type = 'text/html', $CODE = 'utf-8', $methods = array('GET', 'POST', 'OPTIONS'), $servers = '*', $protocol = 'https', $lifetime = 2400) {
+        $types = array('text/html', 'application/json', 'text/xml');
+        if (!in_array($type, $types)) $type = $types[0];
+        $server_methods = '';
+        foreach ($methods as $method) {
+            if (in_array(mb_strtoupper($method), array('GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'TRACE', 'PATCH'))) $server_methods .= ($server_methods)?", ".mb_strtoupper($method):mb_strtoupper($method);
+        }
+        if (!$server_methods) $server_methods = "GET";
+        if ($servers !== "*" || $servers !== null || $servers !== "null" || !preg_match("/^http(s)?:\/\/[^\s]+/", $servers)) $servers = "*";
+        if ($servers === null) $servers = "null";
+        if (!in_array($protocol, array('http', 'https', 'ftp'))) $protocol = 'https';
+        if ($lifetime <= 5) $lifetime = 2400;
+        header("Access-Control-Allow-Origin: ".$servers);
+        header("Access-Control-Allow-Methods: ".$server_methods);
+        header("Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token");
+        header("X-XSS-Protection: 1; mode=block");
+        header("X-Content-Type-Options: nosniff");
+        if ($protocol == 'https') {
+            header("Strict-Transport-Security: max-age=$lifetime; preload; includeSubDomains");
+            header("Expect-CT: max-age=$lifetime, enforce");
+        }
+        header("X-Frame-Options: DENY");
+        header("Content-Security-Policy: frame-ancestors 'self'");
+        header("Content-Type: $type; charset=$CODE");
+        return true;
+    }
+
+    /**
+     * Расчёт параметров пагинации
+     * @param $sum - общее количество записей
+     * @param int $page - текущая страница
+     * @param int $res_on_page - количество записей на странице (LIMIT)
+     * @param int $pages_show - количество отображаемых закладок
+     * @return array
+     *      keys (ключи ответа):
+     *          sum         - общее количество записей
+     *          pages       - общее количество страниц
+     *          page        - номер отображаемой страницы
+     *          size        - максимальное количество записей на страницу
+     *          size_now    - количество записей на текущей странице
+     *          begin       - страница с которой начинается текущий отсчёт
+     *          end         - страница которой заканчивается текущий отсчёт
+     *          forward     - показывать ли быстрый переход в начало (true/false)
+     *          back        - показывать ли быстрый переход в конец (true/false)
+     */
+    public static function getPagination ($sum, $page = 1, $res_on_page = 20, $pages_show = 5) {
+        if (!$page) $page = 1;
+        settype($res_on_page, "integer");
+        settype($pages_show, "integer");
+        if (!$res_on_page || $res_on_page < 5) $res_on_page = 20;
+        if (!$pages_show || $pages_show < 3) $pages_show = 5;
+        $pages = ceil($sum/$res_on_page);
+        if ($page == $pages) $now_view = $sum - ($res_on_page*($page - 1));
+        else $now_view = $res_on_page;
+        if (($pages - $pages_show) <= 0) $pages_show = $pages;
+        $koe = ceil($pages_show/2);
+        if ($page <= $koe) $begin = 1;
+        elseif(($page+$koe-1) >= $pages) $begin = (($pages-$pages_show) >= 0)?$pages-$pages_show+1:1;
+        else $begin = $page - $koe + 1;
+        $end = $begin + $pages_show - 1;
+        $forward = ($begin >= 2)?true:false;
+        $back = (($pages - $end) > 1)?true:false;
+
+        $pagination = array();
+        $pagination['sum'] = $sum;              // общее количество записей
+        $pagination['pages'] = $pages;          // общее количество страниц
+        $pagination['page'] = $page;            // номер отображаемой страницы
+        $pagination['size'] = $res_on_page;     // количество записей на страницах
+        $pagination['size_now'] = $now_view;    // количество записей на текущей странице
+        $pagination['begin'] = $begin;          // страница с которой начинается текущий отсчёт
+        $pagination['end'] = $end;              // страница которой заканчивается текущий отсчёт
+        $pagination['forward'] = $forward;      // показывать ли быстрый переход в начало
+        $pagination['back'] = $back;            // показывать ли быстрый переход в конец
+        return $pagination;
+    }
+
+    /**
+     * Формирование из массива XML файла
+     * @param $array - переданный массив
+     * @param null $title - имя первичного тэга, по умолчанию 'root'
+     * @param bool $first - первое вхождение, поддерживаем внутреннюю цикличность, если обрабатываем массив массивов, то при последующих обращениях не прописываем заголовки
+     * @return string
+     */
+    public static function xml_encode ($array, $title = null, $first = true) {
+        if ($first) {
+            $result = '<?xml version="1.0"?>'."\n";
+            if ($title) $result .= "<$title>\n";
+            else $result .= "<root>\n";
+        }
+        else $result = '';
+        foreach ($array as $key => $value) {
+            if (is_numeric($key)) $key = 'item_' . $key;
+            if (is_array($value)) {
+                $result .= "<$key>\n";
+                $result .= self::xml_encode($value, null, false);
+                $result .= "</$key>\n";
+            }
+            else {
+                $value = strtr($value, array("<" => "&lt;", ">" => "&gt;", "'" => "&apos;", '"' => "&quot;", "&"=>"&amp;"));
+                $result .= "<$key>$value</$key>\n";
+            }
+        }
+        if ($first) {
+            if ($title) $result .= "</$title>\n";
+            else $result .= "</root>\n";
+        }
+        return $result;
+    }
+
+    /**
+     * Получение Json или массива из XML
+     * @param string $xml - данные в формате XML
+     * @param boolean $array - вернуть как массив (true) или вернуть как Json (false)
+     * @return mixed
+     */
+    public static function xml_decode ($xml, $array = true) {
+        if (!($line = simplexml_load_string($xml))) return false;
+        $json = json_encode($line);
+        if ($array) $return = json_decode($json,true);
+        else $return = $json;
+        return $return;
     }
 }
