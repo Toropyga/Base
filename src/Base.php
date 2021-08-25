@@ -3,7 +3,7 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.1.0
+ * @version 1.1.1
  * @copyright 2021
  */
 
@@ -195,7 +195,24 @@ class Base {
         if (!$line) return $line;
         $list = array('utf-8', 'ascii', 'cp1251', 'KOI8-R', 'CP866', 'KOI8-U');
         $cod = '';
-        if (function_exists("mb_detect_encoding")) $cod = @mb_detect_encoding($line, $list, true);
+
+        // Unicode BOM is U+FEFF, but after encoded, it will look like this.
+        $UTF32_BIG_ENDIAN_BOM       = chr(0x00) . chr(0x00) . chr(0xFE) . chr(0xFF);
+        $UTF32_LITTLE_ENDIAN_BOM    = chr(0xFF) . chr(0xFE) . chr(0x00) . chr(0x00);
+        $UTF16_BIG_ENDIAN_BOM       = chr(0xFE) . chr(0xFF);
+        $UTF16_LITTLE_ENDIAN_BOM    = chr(0xFF) . chr(0xFE);
+        $UTF8_BOM                   = chr(0xEF) . chr(0xBB) . chr(0xBF);
+
+        $first1 = substr($line, 0, 2);
+        $first2 = substr($line, 0, 3);
+        $first3 = substr($line, 0, 3);
+
+        if ($first2 == $UTF8_BOM)                       $cod = 'utf-8';
+        elseif ($first3 == $UTF32_BIG_ENDIAN_BOM)       $cod = 'utf-32be';
+        elseif ($first3 == $UTF32_LITTLE_ENDIAN_BOM)    $cod = 'utf-32le';
+        elseif ($first1 == $UTF16_BIG_ENDIAN_BOM)       $cod = 'utf-16be';
+        elseif ($first1 == $UTF16_LITTLE_ENDIAN_BOM)    $cod = 'utf-16le';
+        elseif (function_exists("mb_detect_encoding")) $cod = @mb_detect_encoding($line, $list, true);
         if (!$cod) $cod = self::detect_encoding($line);
         if ($cod != $enc) $line = @mb_convert_encoding($line, $enc, $cod);
         return $line;
@@ -210,27 +227,48 @@ class Base {
      */
     public static function detect_encoding ($string, $pattern_size = 50) {
         $list = array('utf-8', 'ascii', 'cp1251', 'KOI8-R', 'CP866', 'KOI8-U', 'ISO-8859-1');
-        $c = strlen($string);
-        if ($c > $pattern_size) {
-            $string = substr($string, floor(($c - $pattern_size) /2), $pattern_size);
-            $c = $pattern_size;
-        }
+        $enc = '';
 
-        $reg1 = '/(\xE0|\xE5|\xE8|\xEE|\xF3|\xFB|\xFD|\xFE|\xFF)/i';
-        $reg2 = '/(\xE1|\xE2|\xE3|\xE4|\xE6|\xE7|\xE9|\xEA|\xEB|\xEC|\xED|\xEF|\xF0|\xF1|\xF2|\xF4|\xF5|\xF6|\xF7|\xF8|\xF9|\xFA|\xFC)/i';
+        // Unicode BOM is U+FEFF, but after encoded, it will look like this.
+        $UTF32_BIG_ENDIAN_BOM       = chr(0x00) . chr(0x00) . chr(0xFE) . chr(0xFF);
+        $UTF32_LITTLE_ENDIAN_BOM    = chr(0xFF) . chr(0xFE) . chr(0x00) . chr(0x00);
+        $UTF16_BIG_ENDIAN_BOM       = chr(0xFE) . chr(0xFF);
+        $UTF16_LITTLE_ENDIAN_BOM    = chr(0xFF) . chr(0xFE);
+        $UTF8_BOM                   = chr(0xEF) . chr(0xBB) . chr(0xBF);
 
-        $mk = 10000;
-        $enc = 'utf-8';
-        foreach ($list as $item) {
-            $sample1 = @iconv($item, 'cp1251', $string);
-            $gl = @preg_match_all($reg1, $sample1, $arr);
-            $sl = @preg_match_all($reg2, $sample1, $arr);
-            if (!$gl || !$sl) continue;
-            $k = abs(3 - ($sl / $gl));
-            $k += $c - $gl - $sl;
-            if ($k < $mk) {
-                $enc = $item;
-                $mk = $k;
+        $first1 = substr($string, 0, 2);
+        $first2 = substr($string, 0, 3);
+        $first3 = substr($string, 0, 3);
+
+        if ($first2     == $UTF8_BOM)                   $enc = 'utf-8';
+        elseif ($first3 == $UTF32_BIG_ENDIAN_BOM)       $enc = 'utf-32be';
+        elseif ($first3 == $UTF32_LITTLE_ENDIAN_BOM)    $enc = 'utf-32le';
+        elseif ($first1 == $UTF16_BIG_ENDIAN_BOM)       $enc = 'utf-16be';
+        elseif ($first1 == $UTF16_LITTLE_ENDIAN_BOM)    $enc = 'utf-16le';
+
+        if (!$enc) {
+            $c = strlen($string);
+            if ($c > $pattern_size) {
+                $string = substr($string, floor(($c - $pattern_size) / 2), $pattern_size);
+                $c = $pattern_size;
+            }
+
+            $reg1 = '/(\xE0|\xE5|\xE8|\xEE|\xF3|\xFB|\xFD|\xFE|\xFF)/i';
+            $reg2 = '/(\xE1|\xE2|\xE3|\xE4|\xE6|\xE7|\xE9|\xEA|\xEB|\xEC|\xED|\xEF|\xF0|\xF1|\xF2|\xF4|\xF5|\xF6|\xF7|\xF8|\xF9|\xFA|\xFC)/i';
+
+            $mk = 10000;
+            $enc = 'utf-8';
+            foreach ($list as $item) {
+                $sample1 = @iconv($item, 'cp1251', $string);
+                $gl = @preg_match_all($reg1, $sample1, $arr);
+                $sl = @preg_match_all($reg2, $sample1, $arr);
+                if (!$gl || !$sl) continue;
+                $k = abs(3 - ($sl / $gl));
+                $k += $c - $gl - $sl;
+                if ($k < $mk) {
+                    $enc = $item;
+                    $mk = $k;
+                }
             }
         }
         return $enc;
