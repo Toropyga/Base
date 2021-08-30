@@ -186,6 +186,10 @@ $text = Base::convertLine($line, 'сз1251');
 ```
 Пример:
 ```php
+$code = Base::detect_encoding($string);
+```
+или
+```php
 $code = Base::detect_encoding($string, 100);
 ```
 ### Экранирование данных
