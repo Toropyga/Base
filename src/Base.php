@@ -3,7 +3,7 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.1.1
+ * @version 1.2.0
  * @copyright 2021
  */
 
@@ -193,7 +193,6 @@ class Base {
      */
     public static function convertLine ($line, $enc = 'utf-8') {
         if (!$line) return $line;
-        $list = array('utf-8', 'ascii', 'cp1251', 'KOI8-R', 'CP866', 'KOI8-U');
         $cod = '';
 
         // Unicode BOM is U+FEFF, but after encoded, it will look like this.
@@ -212,22 +211,28 @@ class Base {
         elseif ($first3 == $UTF32_LITTLE_ENDIAN_BOM)    $cod = 'utf-32le';
         elseif ($first1 == $UTF16_BIG_ENDIAN_BOM)       $cod = 'utf-16be';
         elseif ($first1 == $UTF16_LITTLE_ENDIAN_BOM)    $cod = 'utf-16le';
-        elseif (function_exists("mb_detect_encoding")) $cod = @mb_detect_encoding($line, $list, true);
         if (!$cod) $cod = self::detect_encoding($line);
         if ($cod != $enc) $line = @mb_convert_encoding($line, $enc, $cod);
         return $line;
     }
 
     /**
-     * Определение кодировки текста, если не отработала функция mb_detect_encoding
+     * Определение кодировки текста
      * Используем в функции convertLine
      * @param $string - строка с текстом
      * @param int $pattern_size - максимальная длина строки для парсинга
      * @return mixed|string
      */
     public static function detect_encoding ($string, $pattern_size = 50) {
-        $list = array('utf-8', 'ascii', 'cp1251', 'KOI8-R', 'CP866', 'KOI8-U', 'ISO-8859-1');
+        $list = array(
+            'utf-8', 'ascii', 'cp1251', 'KOI8-R', 'CP866', 'KOI8-U', 'HTML-ENTITIES',
+            'ISO-8859-1', 'ISO-8859-2', 'ISO-8859-3', 'ISO-8859-4', 'ISO-8859-5', 'ISO-8859-6', 'ISO-8859-7',
+            'ISO-8859-8', 'ISO-8859-9', 'ISO-8859-10', 'ISO-8859-13', 'ISO-8859-14', 'ISO-8859-15', 'ISO-8859-16',
+            'Windows-1251', 'Windows-1252', 'Windows-1254', 'UCS-2LE', 'UTF-7',
+            'utf-32be', 'utf-32le', 'utf-16be', 'utf-16le', 'JIS', 'SJIS', 'eucjp-win', 'sjis-win', 'gbk');
         $enc = '';
+
+        if (function_exists("mb_detect_encoding") && $cod = @mb_detect_encoding($string, $list, true)) return $enc;
 
         // Unicode BOM is U+FEFF, but after encoded, it will look like this.
         $UTF32_BIG_ENDIAN_BOM       = chr(0x00) . chr(0x00) . chr(0xFE) . chr(0xFF);
