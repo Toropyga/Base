@@ -172,7 +172,7 @@ else {
 ```
 Пример:
 ```php
-$text = Base::convertLine($line, 'сз1251');
+$text = Base::convertLine($line, 'cp1251');
 ```
 ### Определение кодировки текста 
 Работает даже если не отработала функция mb_detect_encoding.
