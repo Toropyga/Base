@@ -3,7 +3,7 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.2.0
+ * @version 1.2.1
  * @copyright 2021
  */
 
@@ -232,7 +232,7 @@ class Base {
             'utf-32be', 'utf-32le', 'utf-16be', 'utf-16le', 'JIS', 'SJIS', 'eucjp-win', 'sjis-win', 'gbk');
         $enc = '';
 
-        if (function_exists("mb_detect_encoding") && $cod = @mb_detect_encoding($string, $list, true)) return $enc;
+        if (function_exists("mb_detect_encoding") && $enc = @mb_detect_encoding($string, $list, true)) return $enc;
 
         // Unicode BOM is U+FEFF, but after encoded, it will look like this.
         $UTF32_BIG_ENDIAN_BOM       = chr(0x00) . chr(0x00) . chr(0xFE) . chr(0xFF);
