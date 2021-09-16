@@ -56,7 +56,7 @@ use FYN\Base;
 (для унификации и удобства)
 ```php
 /**
- * @param $data - массис
+ * @param array $data - массив
  * @return object
  *
  * function ArrayToObj ($data);
@@ -70,7 +70,7 @@ $data = Base::ArrayToObj($data);
 (для унификации и удобства)
 ```php
 /**
- * @param $data - объект
+ * @param object $data - объект
  * @return array
  *
  * function ObjToArray ($data);
@@ -116,7 +116,7 @@ $dump = Base::dump($array, false);
 на соответствие условиям безопасности
 ```php
 /**
- * @param $password - проверяемая строка
+ * @param string $password - проверяемая строка
  * @param int $len - строка имеет длину не менее указанного количества символов
  * @param int $type - тип строки
  *     0 => строка содержит хотя бы одну цифру, хотя бы один спецсимвол, хотя бы одну латинскую букву в нижнем регистре, хотя бы одну латинскую букву в верхнем регистре;
@@ -143,7 +143,7 @@ else {
 на существование
 ```php
 /**
- * @param $date - проверяемая дата
+ * @param string $date - проверяемая дата
  * @param string $format - формат проверяемой даты, по умолчанию 'd/m/Y H:i:s'
  * @return bool
  *
@@ -178,7 +178,7 @@ $text = Base::convertLine($line, 'cp1251');
 Работает даже если не отработала функция mb_detect_encoding.
 ```php
 /**
- * @param $string - строка с текстом
+ * @param string $string - строка с текстом
  * @param int $pattern_size - максимальная длина строки для парсинга
  *
  * function detect_encoding ($string, $pattern_size = 50);
@@ -211,7 +211,7 @@ $array = Base::screeningData($array, 'cp1251');
 ```php
 /**
  * Деэкранирование данных
- * @param $array
+ * @param array $array
  * @return array|string
  *
  * function unscreeningData($array);
@@ -272,7 +272,7 @@ Base::setHeaders('text/json', 'utf-8', array('GET', 'POST', 'OPTIONS'), '*', 'ht
 ### Расчёт параметров пагинации
 ```php
 /**
- * @param $sum - общее количество записей
+ * @param int $sum - общее количество записей
  * @param int $page - текущая страница
  * @param int $res_on_page - количество записей на странице (LIMIT)
  * @param int $pages_show - количество отображаемых закладок
@@ -298,8 +298,8 @@ $pagination = Base::getPagination(187, 1, 25, 5);
 ### Формирование XML из массива
 ```php
 /**
- * @param $array - переданный массив
- * @param null $title - имя первичного тэга, по умолчанию 'root'
+ * @param array $array - переданный массив
+ * @param string|null $title - имя первичного тэга, по умолчанию 'root'
  * @param bool $first - первое вхождение, поддерживаем внутреннюю цикличность, если обрабатываем массив массивов, то при последующих обращениях не прописываем заголовки
  * @return string
  *
