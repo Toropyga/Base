@@ -3,7 +3,7 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.2.3
+ * @version 1.2.4
  * @copyright 2021
  */
 
@@ -21,38 +21,35 @@ class Base {
 
     /**
      * Формируем из массива объект (для унификации и удобства)
-     * @param array $data - массив
+     * @param array|object $data - массив
      * @return object
      */
     public static function ArrayToObj ($data) {
         if (!is_array($data) && !is_object($data)) return $data;
+        if (is_array($data)) $data = (object) $data;
         foreach ($data as $key=>$value) {
-            if (is_array($value)) $data[$key] = (object) $value;
-            if (isset($data->$key) && is_object($data->$key)) $data->$key = self::ArrayToObj($data->$key);
+            if (is_array($value)) $data->$key = self::ArrayToObj($value);
         }
-        $data = (object) $data;
         return $data;
     }
 
     /**
      * Формируем из объекта массив (только для унификации и удобства)
-     * @param object $data - объект
+     * @param object|array $data - объект
      * @return array
      */
     public static function ObjToArray ($data) {
         if (!is_array($data) && !is_object($data)) return $data;
         if (is_object($data)) $data = (array) $data;
         foreach ($data as $key=>$value) {
-            if (is_object($value)) $data[$key] = (array) $value;
-            if (isset($data[$key]) && is_array($data[$key])) $data[$key] = self::ObjToArray($data[$key]);
+            if (is_object($value)) $data[$key] = self::ObjToArray($value);
         }
-        $data = (array) $data;
         return $data;
     }
 
     /**
      * Вычисляем хэш строки
-     * @param string $string - строка которая шифруется
+     * @param string $string - строка, которая шифруется
      * @param string $alg - алгоритм шифрования (тип используемой функции), по умолчанию md5
      * @param string $key - ключ шифрования для алгоритма 'crypt_site'
      * @return bool|string
