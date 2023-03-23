@@ -342,5 +342,5 @@ $json = Base::xml_decode($xml, false);
 ```
 Пример:
 ```php
-Base::function setCookie ($text, $name, 3600, $domain = 'localhost', true, true);
+Base::setCookie ($text, $name, 3600, $domain = 'localhost', true, true);
 ```
