@@ -2,7 +2,7 @@
 Базовые функции PHP "на каждый день".
 
 ![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)
-![Version](https://img.shields.io/badge/version-v1.3.0-blue.svg)
+![Version](https://img.shields.io/badge/version-v1.4.0-blue.svg)
 ![PHP](https://img.shields.io/badge/php-v5.5_--_v8-blueviolet.svg)
 
 ## Содержание
@@ -26,6 +26,7 @@
     - [Расчёт параметров пагинации](#расчёт-параметров-пагинации)
     - [Формирование XML из массива](#формирование-xml-из-массива)
     - [Получение Json или массива из XML](#получение-Json-или-массива-из-xml)
+    - [Установка Cookie](#установка-cookie)
 
 ## Общие понятия
 
@@ -323,4 +324,23 @@ $xml = Base::xml_encode ($array, $title, $first);
 Пример:
 ```php
 $json = Base::xml_decode($xml, false);
+```
+### Установка Cookie
+```php
+/**
+ * @param string $text - значение Cookie
+ * @param string $name - имя Cookie
+ * @param int $live_time - срок действия Cookie в секундах с текущего момента
+ * @param string $domain - домен определяет, на каком домене доступен файл Cookie
+ * @param boolean $secure - передавать Cookie только по HTTPS-протоколу
+ * @param boolean $http_only - запретить любой доступ к Cookie из JavaScript
+ * @param string $samesite - установка доступности межсайтовых запросов к Cookie('', 'Strict', 'Lax')
+ * @param string $path - URL-префикс пути к Cookie
+ *
+ * function setCookie ($text, $name, $live_time = 86400, $domain = 'localhost', $secure = true, $http_only = false, $samesite = 'lax', $path = '/')
+ */
+```
+Пример:
+```php
+Base::function setCookie ($text, $name, 3600, $domain = 'localhost', true, true);
 ```

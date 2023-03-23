@@ -3,7 +3,7 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.3.0
+ * @version 1.4.0
  * @copyright 2021
  */
 
@@ -14,9 +14,23 @@ use DateTime;
 class Base {
 
     /**
+     * Ключ шифрования токенов (набор символов)
+     * @var string
+     */
+    public $crypt_key = 'Toropyga_Crypt_Key';
+
+    /**
+     * Алгоритм шифрования для функции getKeyHash ('password', 'password_bcrypt', 'crypt', 'sha1', 'hash', 'md5')
+     * @var string
+     */
+    private $crypt_type = 'hash';
+
+    /**
      * Base constructor.
      */
     public function __construct() {
+        if (!defined('CRYPT_KEY')) define('CRYPT_KEY', $this->crypt_key);
+        if (!defined('CRYPT_TYPE')) define('CRYPT_TYPE', $this->crypt_type);
     }
 
     /**
@@ -59,6 +73,8 @@ class Base {
         if (!$alg && defined("CRYPT_TYPE")) $alg = CRYPT_TYPE;
         elseif (!$alg) $alg = 'md5';
 
+        if (!$key && CRYPT_KEY) $key = CRYPT_KEY;
+
         switch ($alg) {
             case 'password':
                 $string = password_hash($string, PASSWORD_DEFAULT);
@@ -67,12 +83,8 @@ class Base {
                 $string = password_hash($string, PASSWORD_BCRYPT);
                 break;
             case 'crypt':
-                $string = crypt($string);
-                break;
             case 'crypt_site':
-                if ($key) $string = crypt($string, $key);
-                elseif (defined("CRYPT_KEY")) $string = crypt($string, CRYPT_KEY);
-                else $string = crypt($string);
+                $string = crypt($string, $key);
                 break;
             case 'sha1':
                 $string = sha1($string);
@@ -505,5 +517,23 @@ class Base {
         if ($array) $return = json_decode($json,true);
         else $return = $json;
         return $return;
+    }
+
+    /**
+     * Установка Cookie
+     * @param string $text - значение Cookie
+     * @param string $name - имя Cookie
+     * @param int $live_time - срок действия Cookie в секундах с текущего момента
+     * @param string $domain - домен определяет, на каком домене доступен файл Cookie
+     * @param boolean $secure - передавать Cookie только по HTTPS-протоколу
+     * @param boolean $http_only - запретить любой доступ к Cookie из JavaScript
+     * @param string $samesite - установка доступности межсайтовых запросов к Cookie('', 'Strict', 'Lax')
+     * @param string $path - URL-префикс пути к Cookie
+     */
+    public function setCookie ($text, $name, $live_time = 86400, $domain = 'localhost', $secure = true, $http_only = false, $samesite = 'lax', $path = '/') {
+        $samesite = mb_strtolower($samesite);
+        if ($samesite && !in_array($samesite, array('strict', 'lax'))) $samesite = 'lax';
+        $cookie_param = array('expires'=>(time()+$live_time), 'path'=>$path, 'domain'=>$domain, 'secure'=>$secure, 'httponly'=>$http_only, 'samesite'=>$samesite);
+        setcookie($name, $text, $cookie_param);
     }
 }
