@@ -3,8 +3,8 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.4.0
- * @copyright 2021
+ * @version 1.5.0
+ * @copyright 2021-2023
  */
 
 namespace FYN;
@@ -535,5 +535,36 @@ class Base {
         if ($samesite && !in_array($samesite, array('strict', 'lax'))) $samesite = 'lax';
         $cookie_param = array('expires'=>(time()+$live_time), 'path'=>$path, 'domain'=>$domain, 'secure'=>$secure, 'httponly'=>$http_only, 'samesite'=>$samesite);
         setcookie($name, $text, $cookie_param);
+    }
+
+    /**
+     * Обратимое шифрование строки
+     * https://codernotes.ru/articles/php/obratimoe-shifrovanie-po-klyuchu-na-php.html
+     * @param string $string - шифруемая строка
+     */
+    public function MEncrypt ($string) {
+        // Encrypt
+        $ivlen = openssl_cipher_iv_length($cipher="AES-128-CBC");
+        $iv = openssl_random_pseudo_bytes($ivlen);
+        $ciphertext_raw = openssl_encrypt($string, $cipher, CRYPT_KEY, $options=OPENSSL_RAW_DATA, $iv);
+        $hmac = hash_hmac('sha256', $ciphertext_raw, CRYPT_KEY, $as_binary=true);
+        return base64_encode( $iv.$hmac.$ciphertext_raw );
+    }
+
+    /**
+     * Дешифрование строки, зашифрованной функцией MEncrypt
+     * @param string $ciphertext - дешифруемая строка
+     */
+    public function MDecrypt ($ciphertext) {
+        // Decrypt
+        $c = base64_decode($ciphertext);
+        $ivlen = openssl_cipher_iv_length($cipher="AES-128-CBC");
+        $iv = substr($c, 0, $ivlen);
+        $hmac = substr($c, $ivlen, $sha2len=32);
+        $ciphertext_raw = substr($c, $ivlen+$sha2len);
+        $plaintext = openssl_decrypt($ciphertext_raw, $cipher, CRYPT_KEY, $options=OPENSSL_RAW_DATA, $iv);
+        $calcmac = hash_hmac('sha256', $ciphertext_raw, CRYPT_KEY, $as_binary=true);
+        if (hash_equals($hmac, $calcmac)) return $plaintext;
+        else return '';
     }
 }

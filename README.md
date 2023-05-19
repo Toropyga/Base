@@ -2,7 +2,7 @@
 Базовые функции PHP "на каждый день".
 
 ![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)
-![Version](https://img.shields.io/badge/version-v1.4.0-blue.svg)
+![Version](https://img.shields.io/badge/version-v1.5.0-blue.svg)
 ![PHP](https://img.shields.io/badge/php-v5.5_--_v8-blueviolet.svg)
 
 ## Содержание
@@ -27,6 +27,7 @@
     - [Формирование XML из массива](#формирование-xml-из-массива)
     - [Получение Json или массива из XML](#получение-Json-или-массива-из-xml)
     - [Установка Cookie](#установка-cookie)
+    - [Обратимое шифрование строки](#обратимое-шифрование-строки)
 
 ## Общие понятия
 
@@ -343,4 +344,33 @@ $json = Base::xml_decode($xml, false);
 Пример:
 ```php
 Base::setCookie ($text, $name, 3600, $domain = 'localhost', true, true);
+```
+
+### Обратимое шифрование строки
+Шифрование
+```php
+/**
+ * Шифрование строки
+ * Ключ шифрования указывается в настройках
+ * @param string $string - шифруемая строка
+ *
+ * function MEncrypt ($string)
+ */
+```
+Пример:
+```php
+$encoded_text = Base::MEncrypt ('text');
+```
+Дешифрование
+```php
+/**
+ * Дешифрование строки, зашифрованной функцией MEncrypt
+ * @param string $ciphertext - дешифруемая строка
+ *
+ * public function MDecrypt ($ciphertext)
+ */
+```
+Пример:
+```php
+$decoded_text = Base::MEncrypt ($encoded_text);
 ```
