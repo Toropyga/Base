@@ -530,7 +530,7 @@ class Base {
      * @param string $samesite - установка доступности межсайтовых запросов к Cookie('', 'Strict', 'Lax')
      * @param string $path - URL-префикс пути к Cookie
      */
-    public function setCookie ($text, $name, $live_time = 86400, $domain = 'localhost', $secure = true, $http_only = false, $samesite = 'lax', $path = '/') {
+    public static function setCookie ($text, $name, $live_time = 86400, $domain = 'localhost', $secure = true, $http_only = false, $samesite = 'lax', $path = '/') {
         $samesite = mb_strtolower($samesite);
         if ($samesite && !in_array($samesite, array('strict', 'lax'))) $samesite = 'lax';
         $cookie_param = array('expires'=>(time()+$live_time), 'path'=>$path, 'domain'=>$domain, 'secure'=>$secure, 'httponly'=>$http_only, 'samesite'=>$samesite);
@@ -542,7 +542,7 @@ class Base {
      * https://codernotes.ru/articles/php/obratimoe-shifrovanie-po-klyuchu-na-php.html
      * @param string $string - шифруемая строка
      */
-    public function MEncrypt ($string) {
+    public static function MEncrypt ($string) {
         // Encrypt
         $ivlen = openssl_cipher_iv_length($cipher="AES-128-CBC");
         $iv = openssl_random_pseudo_bytes($ivlen);
@@ -555,7 +555,7 @@ class Base {
      * Дешифрование строки, зашифрованной функцией MEncrypt
      * @param string $ciphertext - дешифруемая строка
      */
-    public function MDecrypt ($ciphertext) {
+    public static function MDecrypt ($ciphertext) {
         // Decrypt
         $c = base64_decode($ciphertext);
         $ivlen = openssl_cipher_iv_length($cipher="AES-128-CBC");
