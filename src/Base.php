@@ -3,7 +3,7 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.5.0
+ * @version 1.5.1
  * @copyright 2021-2023
  */
 

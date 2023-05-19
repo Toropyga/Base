@@ -11,11 +11,12 @@
     ],
     "license": "MIT",
     "require": {
-        "php": ">=5.1.0",
+        "php": ">=7.0.0",
         "ext-iconv": "*",
         "ext-mbstring": "*",
         "ext-simplexml": "*",
-        "ext-json": "*"
+        "ext-json": "*",
+	"ext-openssl": "*"
     },
     "require-dev": {
 
