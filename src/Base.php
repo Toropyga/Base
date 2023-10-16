@@ -3,7 +3,7 @@
  * Класс базовых функций
  * @author Yuri Frantsevich (FYN)
  * Date: 17/08/2021
- * @version 1.5.1
+ * @version 1.5.3
  * @copyright 2021-2023
  */
 
@@ -445,7 +445,7 @@ class Base {
         if (!$page) $page = 1;
         settype($res_on_page, "integer");
         settype($pages_show, "integer");
-        if (!$res_on_page || $res_on_page < 5) $res_on_page = 20;
+        if (!$res_on_page || $res_on_page < 1) $res_on_page = 20;
         if (!$pages_show || $pages_show < 3) $pages_show = 5;
         $pages = ceil($sum/$res_on_page);
         if ($page == $pages) $now_view = $sum - ($res_on_page*($page - 1));
